@@ -10,3 +10,8 @@ The steps of algorithm 1 of the paper are performed using:
 1) resample
 2) IntegrateFaultFacesets
 3) removeInvalidCells.py (python script)
+
+[Section 3 of the Paper: OGS-6 Utilities in Folder OGS-MeshEdit]
+1) ResetPropertiesInPolygonalRegion (OGS-6 repository hash tag: )
+2) removeMeshElements (OGS-6 repository hash tag: f5e8bd9674bac35e5731d9e2ff1742436652110d)
+
