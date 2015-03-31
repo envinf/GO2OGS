@@ -27,6 +27,8 @@ Author: Dmitri Naumov, Thomas Fischer
 #include <vtkImageData.h>
 #include <vtkCharArray.h>
 
+#include "tclap/CmdLine.h"
+
 #include "common.h"
 
 void
@@ -58,16 +60,26 @@ main(int argc, char* argv[])
 {
     std::cout << std::setprecision(std::numeric_limits<long double>::digits10);
 
-    if ( argc != 3 )
-    {
-        std::cerr << "Usage: " << argv[0] << "InputFile(vtu) OutputFile(vti).\n";
-        return EXIT_FAILURE;
-    }
+	TCLAP::CmdLine cmd("Resamples a given vtu file", ' ', "0.1");
+	TCLAP::ValueArg<std::string> vtu_arg("i",
+		"vtu-file",
+		"the name of the vtu file",
+		true,
+		"",
+		"filename as string");
+	cmd.add(vtu_arg);
 
-    std::string const input_filename = argv[1];
-    std::string const output_filename = argv[2];
+	TCLAP::ValueArg<std::string> vti_arg("o",
+		"vti-file",
+		"the name of the vti file",
+		true,
+		"",
+		"filename as string");
+	cmd.add(vti_arg);
 
-    vtkSmartPointer<vtkUnstructuredGrid> mesh = readUGrid(input_filename, false);
+	cmd.parse(argc, argv);
+
+    vtkSmartPointer<vtkUnstructuredGrid> mesh = readUGrid(vtu_arg.getValue(), false);
 
     Bbox bbox = getBboxWithoutMaterial12(mesh);
     //mesh->GetBounds(bbox.data());
@@ -139,8 +151,8 @@ main(int argc, char* argv[])
     img->GetCellData()->AddArray(material_ids);
     img->GetCellData()->AddArray(valid_cells);
 
-    writeImage(img, output_filename + ".vti");
+    writeImage(img, vti_arg.getValue());
 
-    writeMesh(mesh, output_filename + ".vtu");
+//    writeMesh(mesh, output_filename + ".vtu");
     return EXIT_SUCCESS;
 }
