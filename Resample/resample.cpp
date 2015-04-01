@@ -77,6 +77,14 @@ main(int argc, char* argv[])
 		"filename as string");
 	cmd.add(vti_arg);
 
+	TCLAP::ValueArg<double> n_soil_layer_cells_arg("s",
+		"soil-layer-cells",
+		"the number of soil layer cells as non-negative integer value",
+		false,
+		0,
+		"non-negative integer value");
+	cmd.add(n_soil_layer_cells_arg);
+
 	cmd.parse(argc, argv);
 
     vtkSmartPointer<vtkUnstructuredGrid> mesh = readUGrid(vtu_arg.getValue(), false);
@@ -88,12 +96,18 @@ main(int argc, char* argv[])
     std::copy(bbox.begin(), bbox.end(), std::ostream_iterator<double>(std::cout, " "));
     std::cout << std::endl;
 
-    int const x_cells = 100;
+    int const x_cells = 50;
     int const y_cells = x_cells * (bbox[3]-bbox[2])/(bbox[1] - bbox[0]);
-    int const z_cells = 150;
+    int const z_cells = 15;
     vtkSmartPointer<vtkImageData> img = createImage(bbox, {x_cells, y_cells, z_cells});
     std::cout << "Input cell number: " << mesh->GetNumberOfCells() << "\n";
     std::cout << "Image dimensions: " << x_cells << " " << y_cells << " " << z_cells << "\n";
+
+	int extent[3];
+	img->GetExtent(extent);
+    std::cout << "Image extend: [" << extent[0] << "," << extent[1] << "] x "
+		<< "[" << extent[2] << "," << extent[3] << "] x "
+		<< "[" << extent[4] << "," << extent[5] << "]\n";
 
     vtkSmartPointer<vtkIntArray> material_ids =
         vtkSmartPointer<vtkIntArray>::New();
@@ -108,7 +122,6 @@ main(int argc, char* argv[])
     valid_cells->SetName("ValidCells");
 
     vtkSmartPointer<vtkDataArray> mesh_material_ids = mesh->GetCellData()->GetScalars("reservoir_units");
-
 
     //
     // Locate image's cell centers in the mesh.
@@ -145,6 +158,17 @@ main(int argc, char* argv[])
             material_ids->SetValue(ci,-1);
         }
     }
+
+	// create soil layer
+	for (int i(extent[0]); i<=extent[1]; ++i) {
+		for (int j(extent[2]); j<=extent[3]; ++j) {
+			for (int k(extent[4]); k<=extent[5]; ++k) {
+				int ijk[3] = {i,j,k};
+				vtkIdType cell_id = img->ComputeCellId(ijk);
+				bool * value = static_cast<bool*>(valid_cells->GetTuple(cell_id));
+			}
+		}
+	}
     //timer.StopTimer();
     //std::cout << "time : " << timer.GetElapsedCPUTime() << "\n";
 
